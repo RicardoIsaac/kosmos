@@ -2,12 +2,19 @@ import React, { useRef, useState, useEffect } from "react";
 import Moveable from "react-moveable";
 
 const App = () => {
+  // use state to control moving components
   const [moveableComponents, setMoveableComponents] = useState([]);
+   // use state to have control of the selected elements
   const [selected, setSelected] = useState(null);
+  const [number, setNumber] = useState(0)
+  const [Url, setUrl] = useState(null)
 
-  console.log(moveableComponents)
-  console.log(selected)
 
+
+
+  
+ 
+//delete the moveable for their id
   const removeMoveable=()=> {
     setMoveableComponents((current)=>current.filter((moveableComponents)=>moveableComponents.id!==selected))  
   } ;
@@ -15,23 +22,33 @@ const App = () => {
 
   const addMoveable = () => {
     // Create a new moveable component and add it to the array
-    const COLORS = ["red", "blue", "yellow", "green", "purple"];
+    fetch("https://jsonplaceholder.typicode.com/photos")
+      .then((response) => response.json())
+      .then((color) => {
+        setUrl(color[number].url)
+        console.log(color[number].url)
 
+        setNumber(number+1)
+      });
+
+      const COLORS = ["red", "blue", "yellow", "green", "purple"];
+      //base structure for element creation, random math is used to choose a random color, width and length.
     setMoveableComponents([
       ...moveableComponents,
       {
         id: Math.floor(Math.random() * Date.now()),
         top: 0,
         left: 0,
-        width: 100,
-        height: 100,
-      
+        width: Math.floor(Math.random() * 100),
+        height: Math.floor(Math.random() * 100),
+        url:Url,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         updateEnd: true
       },
     ]);
   };
-
+ 
+  //update the lost of moviable
   const updateMoveable = (id, newComponent, updateEnd = false) => {
     const updatedMoveables = moveableComponents.map((moveable, i) => {
       if (moveable.id === id) {
@@ -102,6 +119,7 @@ const Component = ({
   width,
   height,
   index,
+  url,
   color,
   id,
   setSelected,
@@ -109,7 +127,6 @@ const Component = ({
   updateEnd,
 }) => {
   const ref = useRef();
-
   const [nodoReferencia, setNodoReferencia] = useState({
     top,
     left,
@@ -117,6 +134,7 @@ const Component = ({
     height,
     index,
     color,
+    url,
     id,
   });
 
@@ -143,6 +161,7 @@ const Component = ({
       width: newWidth,
       height: newHeight,
       color,
+      url,
     });
 
     // ACTUALIZAR NODO REFERENCIA
@@ -164,7 +183,7 @@ const Component = ({
       left: left + translateX < 0 ? 0 : left + translateX,
     });
   };
-
+    //update final change
   const onResizeEnd = async (e) => {
     let newWidth = e.lastEvent?.width;
     let newHeight = e.lastEvent?.height;
@@ -185,7 +204,7 @@ const Component = ({
     const absoluteTop = top;
     const absoluteLeft = left ;
     
-    // beforeTranslate[0] acumula el error de moviemiento
+    // beforeTranslate[0] acumula el error de movimiento
     updateMoveable(
       id,
       {
@@ -194,9 +213,11 @@ const Component = ({
         width: newWidth,
         height: newHeight,
         color,
+        url
       },
       true
     );
+  
   };
 
   return (
@@ -213,13 +234,15 @@ const Component = ({
           width: width,
           height: height,
           background: color,
+          url:url
+          
         }}
         onClick={() => setSelected(id)}
       />
 
       <Moveable
         target={isSelected && ref.current}
- 
+        
         resizable
         draggable
         onDrag={(e) => {
